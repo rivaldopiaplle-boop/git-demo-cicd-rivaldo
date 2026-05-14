@@ -1,0 +1,110 @@
+# Integration continue , deploiement continu
+name: Integration continue
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  #tester le frontend, backend, integration et build image
+  frontend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: npm install
+      - name: run frontend tests
+        run: npm test
+
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: ${{secrets.CI_CD_PASSWORD}}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    env:
+      DB_URL: localhost
+      DB_USERNAME: root
+      DB_PASSWORD: ${{secrets.CI_CD_PASSWORD}}
+      DB_DATABASE: testdb
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up .NET core SDK 6
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: "6.0.x"
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Run backend tests
+        run: dotnet test --no-build --verbosity normal
+  integration-test:
+    runs-on: ubuntu-latest
+    need: [backend-test, frontend-test]
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: ${{secrets.CI_CD_PASSWORD}}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    env:
+      MYSQL_PASSWORD: ${{secrets.CI_CD_PASSWORD}}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run database migration
+        run: ./bootstrap-mysql.sh
+        working-directory: mysql
+      - name: Start components
+        run: docker compose -f docker-compose.build.yml up -d
+        env:
+        DOCKER_NETWORK:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: "11"
+      - name: Build with Gradle
+        run: ./gradlew build --no-daemon
+      - name: Build Docker image
+        run: docker build -t myapp:latest .
+      - name: Run tests
+        run: ./gradlew test --no-daemon
+      - name: Publish Docker image
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker tag myapp:latest ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+      - name: Deploy to Kubernetes
+        run: |
+          echo ${{ secrets.KUBE_CONFIG }} | base64 --decode > kubeconfig
+          export KUBECONFIG=kubeconfig
+          kubectl set image deployment/myapp-deployment myapp=${{ secrets.DOCKER_USERNAME }}/myapp:latest -n myapp-namespace
+          kubectl rollout status deployment/myapp-deployment -n myapp-namespace
