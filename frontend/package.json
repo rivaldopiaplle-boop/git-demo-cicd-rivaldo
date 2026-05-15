@@ -1,0 +1,11 @@
+{
+  "name": "demo-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test": "echo \"No frontend tests defined.\" && exit 0"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
