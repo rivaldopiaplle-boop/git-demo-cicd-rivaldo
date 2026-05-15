@@ -89,7 +89,7 @@ jobs:
         run: |
           export PUPPETEER_EXECUTABLE_PATH="${{ steps.setup-chrome.outputs.chrome-path }}"
           export DB_PASSWORD=${{secrets.CI_CD_PASSWORD}}
-          ./gradlew integrationTest --no-daemon
+          bash ./run_integration.sh
         working-directory: k6
       - name: Stop components
         run: docker compose -f docker-compose.build.yml down
