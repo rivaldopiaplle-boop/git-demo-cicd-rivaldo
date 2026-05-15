@@ -82,11 +82,12 @@ jobs:
         run: docker compose -f docker-compose.build.yml up -d
         env:
           DOCKER_NETWORK: ${{ job.services.mysql.network }}
+      - name: Set up Chrome
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v2
       - name: Run integration tests
         run: |
-          wget -q https://github.com/puppeteer/puppeteer/releases/download/v19.0.0/chrome-linux64.zip
-          unzip chrome-linux64.zip -d chrome
-          export PUPPETEER_EXECUTABLE_PATH=$(find chrome -type f -name "chrome")
+          export PUPPETEER_EXECUTABLE_PATH="${{ steps.setup-chrome.outputs.chrome-path }}"
           export DB_PASSWORD=${{secrets.CI_CD_PASSWORD}}
           ./gradlew integrationTest --no-daemon
         working-directory: k6
