@@ -2,6 +2,12 @@
 // les applique de son côté : un formulaire contourné ne doit rien pouvoir créer.
 export const LONGUEUR_MAX = 200;
 
+export const FILTRES = [
+  { id: "toutes", nom: "Toutes" },
+  { id: "a-faire", nom: "À faire" },
+  { id: "faites", nom: "Faites" },
+];
+
 export function validerTitre(titre) {
   const propre = (titre ?? "").trim();
   if (!propre) return "Le titre est obligatoire.";
@@ -9,10 +15,17 @@ export function validerTitre(titre) {
   return null;
 }
 
-export function resumer(taches) {
-  const faites = taches.filter((t) => t.faite).length;
-  const s = taches.length > 1 ? "s" : "";
-  return `${taches.length} tâche${s}, dont ${faites} faite${faites > 1 ? "s" : ""}`;
+export function resumer({ total = 0, faites = 0 } = {}) {
+  if (total === 0) return "Aucune tâche pour l'instant";
+  const aFaire = total - faites;
+  // « à faire » est invariable : seuls « tâche » et « faite » prennent un s.
+  const pluriel = (nombre) => (nombre > 1 ? "s" : "");
+  return `${total} tâche${pluriel(total)}, ${aFaire} à faire, ${faites} faite${pluriel(faites)}`;
+}
+
+/** Le filtre demandé au serveur ; une valeur inconnue montre tout. */
+export function filtreValide(id) {
+  return FILTRES.some((f) => f.id === id) ? id : "toutes";
 }
 
 export function dateLisible(valeur) {

@@ -35,7 +35,9 @@ form {
 label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
 .ligne { display: flex; gap: 0.5rem; }
 
-input {
+/* Le champ de saisie du formulaire, et lui seul : une case à cocher ne doit pas
+   s'étirer comme une zone de texte. */
+form input[type="text"] {
   flex: 1;
   min-width: 0;
   padding: 0.6rem 0.75rem;
@@ -56,7 +58,7 @@ button {
 }
 
 .erreur { min-height: 1.2rem; margin: 0.5rem 0 0; color: var(--rouge); font-size: 0.85rem; }
-.resume { margin: 1.5rem 0 0.5rem; color: var(--encre-2); font-size: 0.85rem; }
+
 
 ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
 
@@ -71,3 +73,46 @@ li {
 }
 
 li .date { color: var(--encre-2); font-size: 0.8rem; white-space: nowrap; }
+
+.barre { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 1.5rem 0 0.75rem; }
+.resume { margin: 0; color: var(--encre-2); font-size: 0.85rem; }
+
+.filtres { display: flex; gap: 0.25rem; background: var(--surface); border: 1px solid var(--ligne); border-radius: 999px; padding: 0.2rem; }
+
+.filtre {
+  padding: 0.35rem 0.8rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--encre-2);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.filtre.actif { background: var(--encre); color: var(--surface); font-weight: 600; }
+
+li { align-items: center; }
+li label { flex: 1; cursor: pointer; }
+li.faite label { color: var(--encre-2); text-decoration: line-through; }
+li input[type="checkbox"] { flex: 0 0 auto; width: 1.05rem; height: 1.05rem; accent-color: var(--vert); cursor: pointer; }
+
+.supprimer {
+  padding: 0 0.45rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--encre-2);
+  font-size: 1.15rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.supprimer:hover { background: color-mix(in srgb, var(--rouge) 12%, transparent); color: var(--rouge); }
+
+.vide { margin: 1rem 0 0; color: var(--encre-2); font-size: 0.9rem; text-align: center; }
+
+/* La ligne d'une tâche : coche, titre, date, suppression, alignés à gauche. */
+li { justify-content: flex-start; gap: 0.75rem; padding: 0.65rem 0.9rem; }
+li label { flex: 1; min-width: 0; }
+li .date { flex-shrink: 0; }

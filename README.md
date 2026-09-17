@@ -11,15 +11,20 @@ exécutions elles-mêmes : chaque étage, ses journaux, sa durée.
 
 ## L'application
 
-Un suivi de tâches : lister, créer, refuser ce qui n'est pas valide.
+Un suivi de tâches qui se tient : lister, filtrer, créer, cocher, supprimer, refuser ce
+qui n'est pas valide, et des compteurs calculés par la base.
 
 | Partie | Contenu |
 | --- | --- |
 | `frontend/` | Page statique et module `taches.js` (règles d'affichage), servis par nginx, qui transmet `/api` au back-end |
-| `backend/Api/` | API .NET 10 minimale : `GET /api/sante`, `GET /api/taches`, `POST /api/taches` |
+| `backend/Api/` | API .NET 10 minimale : `/api/sante`, `/api/taches` (liste filtrable, création), `/api/taches/{id}` (lecture, `PATCH`, `DELETE`), `/api/taches/compteurs` |
 | `backend/BackendTests/` | Tests unitaires des règles, et tests d'API contre une vraie base MySQL |
 | `mysql/` | `schema.sql`, la seule source de la structure des données, et la migration qui l'applique |
 | `k6/` | Tenue en charge avec k6, et parcours d'un visiteur dans un vrai Chrome |
+
+`PATCH` ne change que ce qui est envoyé : cocher une tâche n'oblige pas à renvoyer son
+titre. Le filtre se donne dans l'adresse (`?filtre=a-faire`, `?filtre=faites`), et une
+valeur inconnue montre tout plutôt que de répondre par une erreur.
 
 La règle du titre vit côté serveur. Le formulaire la reprend pour le confort, mais le
 test du navigateur vérifie aussi qu'un appel direct à l'API, formulaire contourné, est

@@ -26,11 +26,26 @@ export default function () {
   );
   check(creation, { "création : 201": (r) => r.status === 201 });
 
-  const liste = http.get(`${BASE}/api/taches`);
-  check(liste, {
-    "liste : 200": (r) => r.status === 200,
-    "liste : au moins une tâche": (r) => Array.isArray(r.json()) && r.json().length > 0,
-  });
+  // Cocher la tâche qu'on vient de créer : c'est l'écriture la plus fréquente
+  // d'une liste de tâches, et elle passe par un UPDATE.
+  const id = creation.status === 201 ? creation.json().id : null;
+  if (id) {
+    const coche = http.patch(`${BASE}/api/taches/${id}`, JSON.stringify({ faite: true }), {
+      headers: { "Content-Type": "application/json" },
+    });
+    check(coche, { "coche : 200": (r) => r.status === 200 && r.json().faite === true });
+  }
+
+  const liste = http.get(`${BASE}/api/taches?filtre=a-faire`);
+  check(liste, { "liste filtrée : 200": (r) => r.status === 200 && Array.isArray(r.json()) });
+
+  const compteurs = http.get(`${BASE}/api/taches/compteurs`);
+  check(compteurs, { "compteurs : 200": (r) => r.status === 200 && r.json().total > 0 });
+
+  if (id) {
+    const suppression = http.del(`${BASE}/api/taches/${id}`);
+    check(suppression, { "suppression : 204": (r) => r.status === 204 });
+  }
 
   sleep(0.5);
 }
