@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Suivi de tâches | démonstration de chaîne CI/CD</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Suivi de tâches</h1>
+        <p class="sous">Application de démonstration de la chaîne d'intégration continue : front nginx, API .NET, base MySQL.</p>
+        <p class="etat" id="etat">Vérification de l'API…</p>
+      </header>
+
+      <form id="formulaire" autocomplete="off">
+        <label for="titre">Nouvelle tâche</label>
+        <div class="ligne">
+          <input id="titre" name="titre" type="text" maxlength="250" placeholder="Relire la chaîne d'intégration" />
+          <button type="submit">Ajouter</button>
+        </div>
+        <p class="erreur" id="erreur" role="alert"></p>
+      </form>
+
+      <section>
+        <p class="resume" id="resume"></p>
+        <ul id="liste"></ul>
+      </section>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

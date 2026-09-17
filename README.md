@@ -1,9 +1,76 @@
-# Initialiser
+# Chaîne CI/CD multi-conteneurs
 
-Initialiser is a simple tool to help you create a new project with a predefined structure and files. It allows you to quickly set up a new project by providing a template that you can customize according to your needs.
+[![Integration continue](https://github.com/rivaldopiaplle-boop/git-demo-cicd-rivaldo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rivaldopiaplle-boop/git-demo-cicd-rivaldo/actions/workflows/ci.yml?query=branch%3Amain)
 
-## Features
+Une chaîne d'intégration et de publication en quatre étages, et l'application qu'elle
+vérifie : un front statique servi par nginx, une API .NET, une base MySQL. L'application
+reste volontairement petite. Ce qui est démontré ici, c'est la chaîne.
 
-- Create a new project with a predefined structure
-- Customize the template files to fit your project requirements
-- Save time and effort when starting a new project
+Le badge ci-dessus donne l'état de la dernière exécution sur `main`, et le lien mène aux
+exécutions elles-mêmes : chaque étage, ses journaux, sa durée.
+
+## L'application
+
+Un suivi de tâches : lister, créer, refuser ce qui n'est pas valide.
+
+| Partie | Contenu |
+| --- | --- |
+| `frontend/` | Page statique et module `taches.js` (règles d'affichage), servis par nginx, qui transmet `/api` au back-end |
+| `backend/Api/` | API .NET 10 minimale : `GET /api/sante`, `GET /api/taches`, `POST /api/taches` |
+| `backend/BackendTests/` | Tests unitaires des règles, et tests d'API contre une vraie base MySQL |
+| `mysql/` | `schema.sql`, la seule source de la structure des données, et la migration qui l'applique |
+| `k6/` | Tenue en charge avec k6, et parcours d'un visiteur dans un vrai Chrome |
+
+La règle du titre vit côté serveur. Le formulaire la reprend pour le confort, mais le
+test du navigateur vérifie aussi qu'un appel direct à l'API, formulaire contourné, est
+refusé avec un code 400.
+
+## Lancer la pile en local
+
+Prérequis : Docker et Node 20.
+
+```bash
+cp .env.example .env          # y poser MYSQL_ROOT_PASSWORD
+docker compose -f docker-compose.build.yml up -d --build --wait
+bash mysql/bootstrap-mysql.sh # applique le schéma
+```
+
+L'application répond alors sur http://localhost:8080.
+
+Les tests d'intégration, contre cette pile :
+
+```bash
+cd k6
+K6_BASE_URL=http://host.docker.internal:8080 bash run_integration.sh
+```
+
+`K6_BASE_URL` n'est utile que sur Windows et macOS : k6 tourne dans un conteneur, où
+`localhost` désigne le conteneur lui-même. Sur Linux, l'adresse par défaut suffit.
+
+Les tests du back-end, contre une base réelle :
+
+```bash
+docker run -d --name mysql-test -e MYSQL_ROOT_PASSWORD=motdepasse-local mysql:8.4
+cd backend && dotnet test Backend.sln   # DB_URL, DB_USERNAME, DB_PASSWORD, DB_DATABASE
+```
+
+## Les quatre étages de la chaîne
+
+| Étage | Ce qu'il vérifie | Ce qui le déclenche |
+| --- | --- | --- |
+| Tests du front | `node --test` sur les règles d'affichage | chaque poussée et chaque demande de fusion |
+| Tests du back-end | tests unitaires, puis tests d'API contre un service MySQL | en parallèle du front |
+| Intégration | la pile entière montée par docker compose, le schéma appliqué, 10 utilisateurs simultanés sous k6 (moins de 1 % d'échecs, 95 % des réponses sous 500 ms), puis le parcours complet dans Chrome | seulement si les deux étages précédents sont verts |
+| Images | images front et back construites en matrice, publiées sur GHCR depuis `main` seulement | seulement si l'intégration est verte |
+
+Deux détails qui comptent :
+
+- **Les images ne portent jamais l'étiquette `latest`.** Elles sont nommées par le hash
+  du commit, plus une étiquette `main`. Redéployer une version précise reste possible.
+- **La sonde de santé interroge vraiment la base** (`SELECT 1`). Un pool de connexions
+  configuré ne prouve pas qu'une base répond.
+
+## Secrets
+
+Le mot de passe de la base vient du secret `CI_CD_PASSWORD` du dépôt. En local, il vit
+dans `.env`, qui n'est pas suivi par Git ; `.env.example` montre la forme attendue.

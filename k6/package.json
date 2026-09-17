@@ -1,0 +1,10 @@
+{
+  "name": "tests-integration",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tests d'integration de la pile : charge k6 et parcours Chrome.",
+  "dependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}

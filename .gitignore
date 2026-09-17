@@ -1,0 +1,7 @@
+# Le mot de passe local ne doit pas suivre le dépôt : voir .env.example.
+.env
+
+# Dépendances et produits de construction
+node_modules/
+bin/
+obj/

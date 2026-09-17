@@ -1,0 +1,73 @@
+:root {
+  --fond: #f4f5f8;
+  --surface: #ffffff;
+  --encre: #0f1420;
+  --encre-2: #4b5467;
+  --ligne: rgb(15 20 32 / 0.1);
+  --vert: #0c9467;
+  --rouge: #c0392b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  background: var(--fond);
+  color: var(--encre);
+  font: 15px/1.6 "Segoe UI", system-ui, sans-serif;
+}
+
+main { max-width: 640px; margin: 0 auto; }
+h1 { margin: 0 0 0.25rem; font-size: 1.6rem; letter-spacing: -0.02em; }
+.sous { margin: 0; color: var(--encre-2); }
+.etat { margin: 0.75rem 0 1.5rem; font-size: 0.85rem; color: var(--encre-2); }
+.etat[data-etat="ok"] { color: var(--vert); }
+.etat[data-etat="panne"] { color: var(--rouge); }
+
+form {
+  background: var(--surface);
+  border: 1px solid var(--ligne);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+.ligne { display: flex; gap: 0.5rem; }
+
+input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--ligne);
+  border-radius: 10px;
+  font: inherit;
+}
+
+button {
+  padding: 0.6rem 1.1rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--encre);
+  color: var(--surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.erreur { min-height: 1.2rem; margin: 0.5rem 0 0; color: var(--rouge); font-size: 0.85rem; }
+.resume { margin: 1.5rem 0 0.5rem; color: var(--encre-2); font-size: 0.85rem; }
+
+ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+
+li {
+  background: var(--surface);
+  border: 1px solid var(--ligne);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+li .date { color: var(--encre-2); font-size: 0.8rem; white-space: nowrap; }
