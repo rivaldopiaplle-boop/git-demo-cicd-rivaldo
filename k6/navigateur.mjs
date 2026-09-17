@@ -6,8 +6,11 @@ import puppeteer from "puppeteer-core";
 const BASE = process.env.BASE_URL || "http://localhost:8080";
 const titre = `Tâche vérifiée par Chrome ${Date.now()}`;
 
+// La chaîne installe Chrome et donne son chemin ; sur un poste de travail, on
+// prend le Chrome déjà installé, pour n'avoir rien à poser avant de lancer.
+const chemin = process.env.PUPPETEER_EXECUTABLE_PATH;
 const navigateur = await puppeteer.launch({
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+  ...(chemin ? { executablePath: chemin } : { channel: "chrome" }),
   headless: true,
   args: ["--no-sandbox", "--disable-dev-shm-usage"],
 });

@@ -27,21 +27,31 @@ refusé avec un code 400.
 
 ## Lancer la pile en local
 
-Prérequis : Docker et Node 20.
+Prérequis : Docker et Node 20. Rien d'autre : le SDK .NET, nginx, MySQL et k6 vivent
+dans les images.
+
+```bash
+node demarrer.mjs
+```
+
+Il vérifie Docker, crée `.env` au besoin, monte les trois conteneurs, applique le schéma,
+attend que l'API réponde vraiment, puis donne l'adresse : http://localhost:8080.
+
+```bash
+node demarrer.mjs --tests     # la pile, puis la charge k6 et le parcours Chrome
+node demarrer.mjs --arreter   # tout arrêter et supprimer les données
+```
+
+Le parcours Chrome prend le navigateur installé sur le poste. Dans la chaîne, c'est
+`browser-actions/setup-chrome` qui le fournit.
+
+À la main, si vous préférez voir chaque étape :
 
 ```bash
 cp .env.example .env          # y poser MYSQL_ROOT_PASSWORD
 docker compose -f docker-compose.build.yml up -d --build --wait
 bash mysql/bootstrap-mysql.sh # applique le schéma
-```
-
-L'application répond alors sur http://localhost:8080.
-
-Les tests d'intégration, contre cette pile :
-
-```bash
-cd k6
-K6_BASE_URL=http://host.docker.internal:8080 bash run_integration.sh
+cd k6 && K6_BASE_URL=http://host.docker.internal:8080 bash run_integration.sh
 ```
 
 `K6_BASE_URL` n'est utile que sur Windows et macOS : k6 tourne dans un conteneur, où
