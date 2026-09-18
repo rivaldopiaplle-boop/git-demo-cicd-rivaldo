@@ -11,4 +11,10 @@
     <PackageReference Include="MySqlConnector" Version="2.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Le schéma part avec l'application : c'est lui qui prépare la base au
+         démarrage chez l'hébergeur, et il reste l'unique source de vérité. -->
+    <Content Include="..\..\mysql\schema.sql" Link="schema.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

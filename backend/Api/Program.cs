@@ -5,6 +5,30 @@ builder.Services.AddSingleton(_ => new DepotTaches(ChaineConnexion.Depuis(builde
 
 var app = builder.Build();
 
+// APPLIQUER_SCHEMA=1 : la base est préparée au démarrage. On l'active chez
+// l'hébergeur, où aucune migration n'est lancée à la main ; ailleurs, c'est
+// mysql/bootstrap-mysql.sh ou les tests qui appliquent le même fichier.
+if (builder.Configuration["APPLIQUER_SCHEMA"] == "1")
+{
+    var depot = app.Services.GetRequiredService<DepotTaches>();
+    var chemin = Path.Combine(AppContext.BaseDirectory, "schema.sql");
+    for (var essai = 1; essai <= 30; essai += 1)
+    {
+        try
+        {
+            await depot.AppliquerSchemaAsync(await File.ReadAllTextAsync(chemin));
+            app.Logger.LogInformation("Schéma appliqué au démarrage.");
+            break;
+        }
+        catch (Exception erreur) when (essai < 30)
+        {
+            // La base met parfois du temps à accepter les connexions.
+            app.Logger.LogWarning("Base pas encore prête ({Essai}/30) : {Message}", essai, erreur.Message);
+            await Task.Delay(TimeSpan.FromSeconds(2));
+        }
+    }
+}
+
 app.MapGet("/api/sante", async (DepotTaches depot) =>
     await depot.BaseRepondAsync()
         ? Results.Ok(new { etat = "operationnel", @base = "disponible" })

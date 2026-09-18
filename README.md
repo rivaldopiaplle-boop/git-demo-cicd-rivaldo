@@ -85,6 +85,36 @@ Deux détails qui comptent :
 - **La sonde de santé interroge vraiment la base** (`SELECT 1`). Un pool de connexions
   configuré ne prouve pas qu'une base répond.
 
+## Mettre en ligne
+
+L'hébergement gratuit de Render ne propose pas de MySQL, et ses 750 heures
+mensuelles sont partagées par tout un compte. [Northflank](https://northflank.com) offre,
+lui, **deux services et une base de données gratuits, sans mise en veille** : exactement
+la forme de cette pile.
+
+1. Créer un compte, puis un projet, et y connecter ce dépôt GitHub.
+2. **Base de données** : ajouter un *MySQL addon*. Northflank donne l'hôte, l'utilisateur,
+   le mot de passe et le nom de la base.
+3. **Service back-end** : construction par Dockerfile, fichier `backend/Dockerfile`,
+   **contexte de construction à la racine du dépôt** (l'image embarque `mysql/schema.sql`).
+   Port 8080. Variables d'environnement :
+
+   | Variable | Valeur |
+   | --- | --- |
+   | `DB_URL` | l'hôte donné par l'addon |
+   | `DB_PORT` | son port |
+   | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE` | ce que l'addon fournit |
+   | `APPLIQUER_SCHEMA` | `1` |
+
+   `APPLIQUER_SCHEMA=1` fait appliquer `mysql/schema.sql` au démarrage : chez un
+   hébergeur, personne n'ouvre de terminal pour lancer la migration.
+
+4. **Service front** : Dockerfile `frontend/Dockerfile`, contexte `frontend/`, port 80,
+   et une variable `ADRESSE_API` qui porte l'adresse interne du back-end, par exemple
+   `http://backend:8080`. nginx remplit son gabarit au démarrage : la même image sert en
+   local et en ligne.
+5. Le front est le service exposé au public ; le back-end n'a pas besoin de l'être.
+
 ## Secrets
 
 Le mot de passe de la base vient du secret `CI_CD_PASSWORD` du dépôt. En local, il vit

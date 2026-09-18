@@ -178,6 +178,20 @@ public class DepotTaches(string chaineConnexion)
         return await commande.ExecuteNonQueryAsync() > 0;
     }
 
+    /// <summary>
+    /// Applique le schéma si la table manque. Utile là où personne n'ouvre de
+    /// terminal : chez l'hébergeur, le service se réveille seul et la première
+    /// requête doit trouver une base prête. En local et dans la chaîne, c'est la
+    /// migration qui s'en charge, et cette méthode ne fait alors rien.
+    /// </summary>
+    public async Task AppliquerSchemaAsync(string schemaSql)
+    {
+        await using var connexion = new MySqlConnection(chaineConnexion);
+        await connexion.OpenAsync();
+        await using var commande = new MySqlCommand(schemaSql, connexion);
+        await commande.ExecuteNonQueryAsync();
+    }
+
     private static Tache Lire(MySqlDataReader lecteur) =>
         new(lecteur.GetInt32(0), lecteur.GetString(1), lecteur.GetBoolean(2), lecteur.GetDateTime(3));
 }

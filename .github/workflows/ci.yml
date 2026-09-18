@@ -126,7 +126,9 @@ jobs:
       - name: Construire, et publier depuis main seulement
         uses: docker/build-push-action@v6
         with:
-          context: ./${{ matrix.composant }}
+          # Le back-end se construit depuis la racine (il embarque le schéma),
+          # le front depuis son dossier.
+          context: ${{ matrix.composant == 'backend' && '.' || './frontend' }}
           file: ./${{ matrix.composant }}/Dockerfile
           push: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           # Jamais « latest » : une étiquette qui bouge empêche de redéployer une
