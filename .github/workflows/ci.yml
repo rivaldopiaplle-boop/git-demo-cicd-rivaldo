@@ -136,3 +136,27 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/spm-${{ matrix.composant }}:${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/spm-${{ matrix.composant }}:main
+
+  deploiement:
+    name: Mise en ligne sur Render
+    runs-on: ubuntu-latest
+    needs: [build-image]
+    if: github.event_name == 'push' && github.ref_name == 'main'
+    steps:
+      # Render tire l'image exacte du commit, pas l'étiquette main : ce qui tourne
+      # en production est ce que la chaîne vient de vérifier. Les crochets de
+      # déploiement sont des secrets du dépôt ; sans eux, l'étage ne fait rien.
+      - name: Redéployer l'API puis le front
+        env:
+          CROCHET_API: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
+          CROCHET_WEB: ${{ secrets.RENDER_DEPLOY_HOOK_WEB }}
+          IMAGES: ghcr.io/${{ github.repository_owner }}
+        run: |
+          if [ -z "$CROCHET_API" ] || [ -z "$CROCHET_WEB" ]; then
+            echo "Crochets de déploiement absents : mise en ligne non déclenchée."
+            exit 0
+          fi
+          encoder() { jq -rn --arg v "$1" '$v|@uri'; }
+          curl -fsS -X POST "$CROCHET_API&imgURL=$(encoder "$IMAGES/spm-backend:$GITHUB_SHA")" > /dev/null
+          curl -fsS -X POST "$CROCHET_WEB&imgURL=$(encoder "$IMAGES/spm-frontend:$GITHUB_SHA")" > /dev/null
+          echo "Render redéploie les images $GITHUB_SHA."

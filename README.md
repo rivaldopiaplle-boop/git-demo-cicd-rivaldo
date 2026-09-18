@@ -87,6 +87,10 @@ Deux détails qui comptent :
 
 ## Mettre en ligne
 
+**En ligne : https://cicd-taches-web.onrender.com** (sonde de santé :
+https://cicd-taches-api.onrender.com/api/sante). Premier chargement lent : le service
+gratuit se réveille.
+
 La pile se déploie sans carte bancaire, en réutilisant ce que la chaîne produit déjà :
 
 - **La base MySQL chez [Aiven](https://aiven.io/free-tier)**, dont l'offre gratuite donne un
@@ -100,12 +104,19 @@ Réglages du back-end :
 | Variable | Valeur |
 | --- | --- |
 | `DB_URL`, `DB_PORT` | l'hôte et le port donnés par Aiven |
-| `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE` | ce qu'Aiven fournit |
+| `DB_USERNAME`, `DB_PASSWORD` | un utilisateur dédié à l'application, créé dans Aiven |
+| `DB_DATABASE` | `taches`, une base créée dans le service Aiven |
 | `APPLIQUER_SCHEMA` | `1` : le schéma s'applique au premier démarrage |
 
 Réglage du front : `ADRESSE_API`, l'adresse publique du back-end chez Render
 (`https://…onrender.com`). nginx garde l'en-tête Host de l'API et envoie son nom pendant
 la négociation TLS : c'est ce qui permet à Render d'aiguiller vers le bon service.
+
+Le dernier étage de la chaîne, « Mise en ligne sur Render », appelle après chaque
+publication depuis main les crochets de déploiement des deux services, avec l'image
+étiquetée par le hash du commit. Les crochets se copient dans Render (*Settings* →
+*Deploy Hook*) et se posent en secrets du dépôt : `RENDER_DEPLOY_HOOK_API` et
+`RENDER_DEPLOY_HOOK_WEB`. Sans eux, l'étage passe sans rien déclencher.
 
 Les services gratuits de Render s'endorment après quinze minutes sans visite ; le premier
 visiteur attend environ une minute. Une heure n'est comptée que quand un service tourne.
