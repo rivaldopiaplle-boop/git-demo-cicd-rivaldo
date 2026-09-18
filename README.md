@@ -87,33 +87,28 @@ Deux détails qui comptent :
 
 ## Mettre en ligne
 
-L'hébergement gratuit de Render ne propose pas de MySQL, et ses 750 heures
-mensuelles sont partagées par tout un compte. [Northflank](https://northflank.com) offre,
-lui, **deux services et une base de données gratuits, sans mise en veille** : exactement
-la forme de cette pile.
+La pile se déploie sans carte bancaire, en réutilisant ce que la chaîne produit déjà :
 
-1. Créer un compte, puis un projet, et y connecter ce dépôt GitHub.
-2. **Base de données** : ajouter un *MySQL addon*. Northflank donne l'hôte, l'utilisateur,
-   le mot de passe et le nom de la base.
-3. **Service back-end** : construction par Dockerfile, fichier `backend/Dockerfile`,
-   **contexte de construction à la racine du dépôt** (l'image embarque `mysql/schema.sql`).
-   Port 8080. Variables d'environnement :
+- **La base MySQL chez [Aiven](https://aiven.io/free-tier)**, dont l'offre gratuite donne un
+  service MySQL par compte, sans carte.
+- **Le back-end et le front chez Render**, en « image existante » : Render exécute les
+  images que la chaîne publie sur GHCR, `ghcr.io/rivaldopiaplle-boop/spm-backend` et
+  `spm-frontend`. Ce qui tourne en ligne est donc exactement ce que la chaîne a vérifié.
 
-   | Variable | Valeur |
-   | --- | --- |
-   | `DB_URL` | l'hôte donné par l'addon |
-   | `DB_PORT` | son port |
-   | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE` | ce que l'addon fournit |
-   | `APPLIQUER_SCHEMA` | `1` |
+Réglages du back-end :
 
-   `APPLIQUER_SCHEMA=1` fait appliquer `mysql/schema.sql` au démarrage : chez un
-   hébergeur, personne n'ouvre de terminal pour lancer la migration.
+| Variable | Valeur |
+| --- | --- |
+| `DB_URL`, `DB_PORT` | l'hôte et le port donnés par Aiven |
+| `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE` | ce qu'Aiven fournit |
+| `APPLIQUER_SCHEMA` | `1` : le schéma s'applique au premier démarrage |
 
-4. **Service front** : Dockerfile `frontend/Dockerfile`, contexte `frontend/`, port 80,
-   et une variable `ADRESSE_API` qui porte l'adresse interne du back-end, par exemple
-   `http://backend:8080`. nginx remplit son gabarit au démarrage : la même image sert en
-   local et en ligne.
-5. Le front est le service exposé au public ; le back-end n'a pas besoin de l'être.
+Réglage du front : `ADRESSE_API`, l'adresse publique du back-end chez Render
+(`https://…onrender.com`). nginx garde l'en-tête Host de l'API et envoie son nom pendant
+la négociation TLS : c'est ce qui permet à Render d'aiguiller vers le bon service.
+
+Les services gratuits de Render s'endorment après quinze minutes sans visite ; le premier
+visiteur attend environ une minute. Une heure n'est comptée que quand un service tourne.
 
 ## Secrets
 
