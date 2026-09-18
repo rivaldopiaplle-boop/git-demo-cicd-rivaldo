@@ -122,3 +122,22 @@ footer { margin: 2.5rem 0 0; padding-top: 1rem; border-top: 1px solid var(--lign
 footer p { margin: 0 0 0.25rem; }
 footer a { color: var(--encre); font-weight: 600; }
 footer .discret { color: var(--encre-2); opacity: 0.75; font-size: 0.8rem; }
+
+/* Les liens vers le dépôt et le portfolio, en tête : c'est la première chose
+   qu'un visiteur venu d'ailleurs doit pouvoir trouver. */
+.liens { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0; }
+
+.lien {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--encre);
+  border-radius: 10px;
+  color: var(--encre);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.lien.principal { background: var(--encre); color: var(--surface); }
+.lien:hover { opacity: 0.85; }
